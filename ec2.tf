@@ -1,5 +1,5 @@
 resource "aws_launch_template" "my_launch_template" {
-  name_prefix   = "my_launch_template"
+  name_prefix   = "my_launch_template1"
   image_id      = data.aws_ami.my_launch_template.id
   instance_type = "t2.micro"
 }
