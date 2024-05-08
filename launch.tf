@@ -21,7 +21,7 @@ resource "aws_launch_template" "my_launch_template" {
 
   ebs_optimized = true
 
-  image_id = data.aws_ami.my_ami.id
+  image_id = data.aws_ami.my_launch_template1.id
 
   instance_initiated_shutdown_behavior = "terminate"
 
