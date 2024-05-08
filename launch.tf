@@ -58,3 +58,14 @@ resource "aws_launch_template" "my_launch_template" {
   }
 
 }
+
+resource "aws_launch_template" "my_launch_template1" {
+  name_prefix   = "my_launch_template1"
+  image_id      = data.aws_ami.my_launch_template1.id
+  instance_type = "t2.micro"
+}
+
+resource "aws_launch_template" "my_launch_template2" {
+  name_prefix = "my_launch_template2"
+  image_id    = data.aws_ami.my_launch_template2.id
+}
