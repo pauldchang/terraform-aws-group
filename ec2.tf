@@ -18,7 +18,7 @@ resource "aws_autoscaling_group" "my_launch_template" {
   mixed_instances_policy {
     launch_template {
       launch_template_specification {
-        launch_template_id = aws_launch_template.my_launch_template.id
+        launch_template_id = aws_launch_template.my_launch_template1.id
       }
 
       override {
