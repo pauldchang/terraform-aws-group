@@ -15,7 +15,7 @@ resource "aws_launch_template" "my_launch_template" {
   instance_type = "t2.micro"
 }
 
-resource "aws_autoscaling_group" "bar" {
+resource "aws_autoscaling_group" "my_launch_template" {
   availability_zones = ["us-east-2a"]
   desired_capacity   = 3
   max_size           = 5
