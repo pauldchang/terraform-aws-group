@@ -9,7 +9,7 @@ resource "aws_launch_template" "my_launch_template2" {
   image_id    = data.aws_ami.my_launch_template2.id
 }
 
-resource "aws_autoscaling_group" "my_launch_template" {
+resource "aws_autoscaling_group" "my_autoscaling_group" {
   availability_zones = ["us-east-2a"]
   desired_capacity   = 2
   max_size           = 5
