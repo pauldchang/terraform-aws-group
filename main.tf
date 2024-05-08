@@ -1,9 +1,4 @@
-# module "terraform6_elb" {
-#   source  = "techtorialdevops/ec2-elb-instance/aws"
-#   instance_type = var.instance_type
-#   ami = var.ami
-#   key_name = "tuncay"
-# }
+
 
 provider "aws" {
   region = "us-east-2"  # Update with your desired region
@@ -89,7 +84,7 @@ resource "aws_security_group" "private_sg" {
 # Define Auto Scaling Group
 resource "aws_launch_configuration" "ec2_launch_config" {
   name          = "ec2-launch-config"
-  image_id      = "ami-0900fe555666598a2"  # Update with your desired AMI
+  image_id      = "ami-09b90e09742640522"  # Update with your desired AMI
   instance_type = "t2.micro"      # Update with your desired instance type
 
   security_groups = [aws_security_group.public_sg.id]
