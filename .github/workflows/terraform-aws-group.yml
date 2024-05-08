@@ -39,7 +39,7 @@ jobs:
 
     - name: Change directory
       run: |
-        cd /terraform-aws-group
+        cd terraform-aws-group
         ls -la
 
     - name: Initialize Terraform
