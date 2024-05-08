@@ -1,35 +1,35 @@
-resource "aws_launch_template" "example" {
-  name_prefix   = "example"
-  image_id      = data.aws_ami.example.id
-  instance_type = "c5.large"
+resource "aws_launch_template" "my_launch_template" {
+  name_prefix   = "my_launch_template"
+  image_id      = data.aws_ami.my_launch_template.id
+  instance_type = "t2.micro"
 }
 
-resource "aws_launch_template" "example2" {
-  name_prefix = "example2"
-  image_id    = data.aws_ami.example2.id
+resource "aws_launch_template" "my_launch_template2" {
+  name_prefix = "my_launch_template2"
+  image_id    = data.aws_ami.my_launch_template2.id
 }
 
-resource "aws_autoscaling_group" "example" {
-  availability_zones = ["us-east-1a"]
-  desired_capacity   = 1
-  max_size           = 1
+resource "aws_autoscaling_group" "my_launch_template" {
+  availability_zones = ["us-east-2a"]
+  desired_capacity   = 2
+  max_size           = 5
   min_size           = 1
 
   mixed_instances_policy {
     launch_template {
       launch_template_specification {
-        launch_template_id = aws_launch_template.example.id
+        launch_template_id = aws_launch_template.my_launch_template.id
       }
 
       override {
-        instance_type     = "c4.large"
+        instance_type     = "t2.micro"
         weighted_capacity = "3"
       }
 
       override {
-        instance_type = "c6g.large"
+        instance_type = "t2.micro"
         launch_template_specification {
-          launch_template_id = aws_launch_template.example2.id
+          launch_template_id = aws_launch_template.my_launch_template2.id
         }
         weighted_capacity = "2"
       }
