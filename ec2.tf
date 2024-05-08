@@ -1,13 +1,3 @@
-resource "aws_instance" "my_launch_template" {
-  launch_template {
-    count   = 3
-    id      = aws_launch_template.my_launch_template.id
-    version = "$Latest"  
-  }
-    tags = {
-    Name = "launch_template_instance"
-  }
-}
 resource "aws_instance" "Data_instance" {
   count         = 2
   ami           = data.aws_ami.my_ami.id
