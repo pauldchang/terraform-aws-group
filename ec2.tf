@@ -1,28 +1,38 @@
-resource "aws_instance" "Data_instance" {
-  count         = 2
-  ami           = data.aws_ami.my_ami.id
-  instance_type = "t2.micro"
-  key_name      = "SSH-MAC"  
-  subnet_id     = "subnet-00468707d5bab7a1a"  
-  tags = {
-    Name = "data_instance"
-  }
+resource "aws_launch_template" "example" {
+  name_prefix   = "example"
+  image_id      = data.aws_ami.example.id
+  instance_type = "c5.large"
 }
 
-resource "aws_launch_template" "my_launch_template" {
-  name_prefix   = "my_launch_template"
-  image_id      = "ami-0900fe555666598a2"
-  instance_type = "t2.micro"
+resource "aws_launch_template" "example2" {
+  name_prefix = "example2"
+  image_id    = data.aws_ami.example2.id
 }
 
-resource "aws_autoscaling_group" "my_launch_template" {
-  availability_zones = ["us-east-2a"]
-  desired_capacity   = 3
-  max_size           = 5
+resource "aws_autoscaling_group" "example" {
+  availability_zones = ["us-east-1a"]
+  desired_capacity   = 1
+  max_size           = 1
   min_size           = 1
 
-  launch_template {
-    id      = aws_launch_template.my_launch_template.id
-    version = "$Latest"
+  mixed_instances_policy {
+    launch_template {
+      launch_template_specification {
+        launch_template_id = aws_launch_template.example.id
+      }
+
+      override {
+        instance_type     = "c4.large"
+        weighted_capacity = "3"
+      }
+
+      override {
+        instance_type = "c6g.large"
+        launch_template_specification {
+          launch_template_id = aws_launch_template.example2.id
+        }
+        weighted_capacity = "2"
+      }
+    }
   }
 }
