@@ -1,12 +1,18 @@
-
-
 provider "aws" {
   region = "us-east-2"  # Update with your desired region
 }
 
 
+# resource "aws_vpc" "my_vpc" {
+#   cidr_block = "10.0.0.0/16"
+# }
 resource "aws_vpc" "my_vpc" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block       = "192.168.0.0/16"
+  instance_tenancy = "default"
+  enable_dns_hostnames = "true"
+  tags = {
+    Name = "my_vpc"
+  }
 }
 
 resource "aws_subnet" "public_subnet" {
@@ -147,7 +153,8 @@ resource "aws_vpc" "my_vpc" {
   cidr_block = "10.0.101.0/24"
 }
 
-resource "aws_internet_gateway" "my_vpc" {}
+resource "aws_internet_gateway" "my_vpc" {
+}
 
 }
 resource "aws_vpn_gateway" "my_vpc" {
