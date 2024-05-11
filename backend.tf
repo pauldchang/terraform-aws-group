@@ -1,7 +1,7 @@
-resource "aws_s3_bucket" "rahat-terraform" {
-  bucket = "rahat-terraform"
-
-  tags = {
-    Name = "rahat-terraform"
+terraform {
+  backend "s3" {
+    bucket = "paulc-terraform6"
+    key    = "terraform.tfstate"
+    region = "us-east-2"
   }
 }
