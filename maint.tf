@@ -117,3 +117,10 @@ resource "aws_autscaling_group" "wordpress_asg"  {
     termination_policies = ["Default"]
   }
 }
+terraform {
+  backend "s3" {
+    bucket = "paulc-terraform6"
+    key    = "terraform.tfstate"
+    region = "us-east-2"
+  }
+}
