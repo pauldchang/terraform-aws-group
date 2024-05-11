@@ -9,26 +9,20 @@ resource "aws_vpc" "main" {
    Name = "Project VPC"
  }
 }
-
 resource "aws_subnet" "public_subnets" {
- count      = length(var.public_subnet_cidrs)
- vpc_id     = aws_vpc.main.id
- cidr_block = element(var.public_subnet_cidrs, count.index)
+  count                  = 3
+  vpc_id                 = aws_vpc.main.id
+  cidr_block             = "10.0.${count.index}.0/24"
  
- tags = {
-   Name = "Public Subnet ${count.index + 1}"
- }
 }
- 
-resource "aws_subnet" "private_subnets" {
- count      = length(var.private_subnet_cidrs)
- vpc_id     = aws_vpc.main.id
- cidr_block = element(var.private_subnet_cidrs, count.index)
- 
- tags = {
-   Name = "Private Subnet ${count.index + 1}"
- }
+
+resource "aws_subnet" "private" {
+  count                  = 3
+  vpc_id                 = aws_vpc.main.id
+  cidr_block             = "10.0.${count.index + 3}.0/24"
 }
+
+# Declare subnets
 
 resource "aws_internet_gateway" "gw" {
  vpc_id = aws_vpc.main.id
@@ -75,7 +69,7 @@ resource "aws_route_table" "private" {
 
 resource "aws_route_table_association" "public" {
   count          = 3
-  subnet_id      = "${element(aws_subnet.public.*.id,count.index)}"
+  subnet_id      = "${element(aws_subnet.public_subnets.*.id,count.index)}"
   route_table_id = aws_route_table.public.id
 }
 
@@ -93,34 +87,120 @@ resource "aws_launch_template" "wordpress" {
   instance_type = "t2.micro"
 
   # Define user data script to set up WordPress and pass credentials as environment variables
-  user_data = <<-EOF
-              #!/bin/bash
-              export DB_USER=your_db_pauldchang
-              export DB_PASSWORD=your_db_password
-              export DB_HOST=your_db_host
-              export DB_NAME=your_db_name
-              # Install and configure WordPress here
-              EOF
+user_data     = <<-EOF
+                  #!/bin/bash
+                  yum update -y
+                  yum install -y httpd php php-mysqlnd
+                  systemctl start httpd
+                  systemctl enable httpd
+                  wget -c https://wordpress.org/latest.tar.gz
+                  tar -xvzf latest.tar.gz -C /var/www/html
+                  cp -r /var/www/html/wordpress/* /var/www/html/
+                  chown -R apache:apache /var/www/html/
+                  EOF
 }
 
   # Create an Auto Scaling Group (ASG) using the launch template
 
+  resource "aws_launch_template" "asg" {
+  name_prefix   = "asg"
+  image_id      = "ami-0900fe555666598a2"
+  instance_type = "t2.micro"
+}
 
-resource "aws_autscaling_group" "wordpress_asg"  {
-  launch_template  {
-    id = aws_launch_template.my_launch_template.id
-    version = "$Lastest"
-    min_size = 1
-    max_size = 99
-    desired_capacity = 1
-    vpc_zone_identifier = aws_subnet.public_subnets[*].id
-    termination_policies = ["Default"]
+resource "aws_autoscaling_group" "asg" {
+  availability_zones = ["us-east-2a"]
+  desired_capacity   = 3
+  max_size           = 99
+  min_size           = 1
+
+  launch_template {
+    id      = aws_launch_template.asg.id
+    version = "$Latest"
   }
 }
+
 terraform {
   backend "s3" {
     bucket = "paulc-terraform6"
     key    = "terraform.tfstate"
     region = "us-east-2"
+  }
+}
+
+# ALB tf
+resource "aws_lb" "app_lb" {
+  name               = "my-app-lb"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.public_sg.id]
+  subnets            = aws_subnet.public_subnets[*].id
+
+  tags = {
+    Name = "my-app-lb"
+  }
+}
+resource "aws_security_group" "public_sg" {
+  description = "public_sg"
+  name = "public_sg"
+  vpc_id = "my_vpc"
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]  # Allow traffic from anywhere
+  }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"  # Allow all outbound traffic
+    cidr_blocks = ["0.0.0.0/0"]  # Allow traffic to anywhere
+  }
+} 
+
+resource "aws_lb_listener" "http_listener" {
+  load_balancer_arn = aws_lb.app_lb.arn
+  port              = 80
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "fixed-response"
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "OK"
+      status_code  = 200
+    }
+}
+}
+
+resource "aws_lb_target_group" "app_target_group" {
+  name     = "my-app-tg"
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.main.id
+
+  health_check {
+    path                = "/"
+    protocol            = "HTTP"
+    port                = "traffic-port"
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    timeout             = 3
+    interval            = 30
+  }
+}
+
+resource "aws_lb_listener_rule" "app_listener_rule" {
+  listener_arn = aws_lb_listener.http_listener.arn
+  priority     = 100
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.app_target_group.arn
+  }
+  condition {
+    host_header {
+      values = ["wordpress.pauldchang.com"]  # Replace with your domain name
+    }
   }
 }
