@@ -102,7 +102,7 @@ user_data     = <<-EOF
 
   # Create an Auto Scaling Group (ASG) using the launch template
 
-  resource "aws_launch_template" "asg" {
+resource "aws_launch_template" "asg" {
   name_prefix   = "asg"
   image_id      = "ami-0900fe555666598a2"
   instance_type = "t2.micro"
@@ -114,8 +114,8 @@ resource "aws_autoscaling_group" "asg" {
   max_size           = 99
   min_size           = 1
 
-  launch_template {
-    id      = aws_launch_template.asg.id
+launch_template {
+    id      = aws_launch_template.wordpress.id
     version = "$Latest"
   }
 }
@@ -143,7 +143,7 @@ resource "aws_lb" "app_lb" {
 resource "aws_security_group" "public_sg" {
   description = "public_sg"
   name = "public_sg"
-  vpc_id = "my_vpc"
+  vpc_id = aws_vpc.main.id
   ingress {
     from_port   = 80
     to_port     = 80
