@@ -97,6 +97,14 @@ user_data     = <<-EOF
                   tar -xvzf latest.tar.gz -C /var/www/html
                   cp -r /var/www/html/wordpress/* /var/www/html/
                   chown -R apache:apache /var/www/html/
+
+                  cat <<EOT >> /var/www/html/wp-config.php
+                  define('DB_NAME', '${var.db_name}');
+                  define('DB_USER', '${var.db_user}');
+                  define('DB_PASSWORD', '${var.db_password}');
+                  define('DB_HOST', '${var.db_host}');
+                  define('DB_CHARSET', 'utf8');
+                  define('DB_COLLATE', '');
                   EOF
 }
 
@@ -202,5 +210,46 @@ resource "aws_lb_listener_rule" "app_listener_rule" {
     host_header {
       values = ["wordpress.pauldchang.com"]  # Replace with your domain name
     }
+  }
+}
+
+# Data instance
+resource "aws_instance" "Data_instance" {
+  ami           = data.aws_ami.my_ami.id
+  instance_type = "t2.micro"
+  key_name      = "SSH-MAC"  
+  subnet_id     = "subnet-00468707d5bab7a1a"  
+  tags = {
+    Name = "data_instance"
+  }
+}
+
+data "aws_ami" "my_ami" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+  }
+    tags = {
+    Name = "Data_instance"
+  }
+}
+
+# data of dns 
+data "aws_lb" "app_lb" {
+  name = "my-app-lb"  # Replace with the name of your ALB
+}
+
+# Retrieve data if DNS
+resource "aws_route53_record" "alb_record" {
+  zone_id = aws_route53_zone.main.zone_id
+  name    = "wordpress.pauldchang.com"
+  type    = "A"
+  alias {
+    name                   = data.aws_lb.app_lb.dns_name
+    zone_id                = data.aws_lb.app_lb.zone_id
+    evaluate_target_health = true
   }
 }
