@@ -242,14 +242,46 @@ data "aws_lb" "app_lb" {
   name = "my-app-lb"  # Replace with the name of your ALB
 }
 
-# Retrieve data if DNS
+
 resource "aws_route53_record" "alb_record" {
-  zone_id = aws_route53_zone.main.zone_id
-  name    = "wordpress.pauldchang.com"
-  type    = "A"
+  provider = aws.us-east-2  # Provider alias for the ALB region
+  zone_id  = "Z011574713TABDE8M6U0Q"
+  name     = "wordpress.pauldchang.com"
+  type     = "A"
   alias {
     name                   = data.aws_lb.app_lb.dns_name
     zone_id                = data.aws_lb.app_lb.zone_id
     evaluate_target_health = true
   }
+  depends_on = [aws_lb.app_lb]
+}
+
+resource "aws_db_instance" "wordpress_db" {
+  allocated_storage    = 20
+  engine               = "mysql"
+  engine_version       = "5.7"
+  instance_class       = "db.t2.micro"
+  name                 = "wordpress-db"
+  username             = var.db_username
+  password             = var.db_password
+  parameter_group_name = "default.mysql5.7"
+
+  tags = {
+    Name = "WordPress Database"
+  }
+}
+
+#
+# Get the DNS endpoint of the RDS instance
+data "aws_db_instance" "wordpress_db_info" {
+  db_instance_identifier = aws_db_instance.wordpress_db.id
+}
+
+# Create Route 53 record for wordpress.pauldchang.com
+resource "aws_route53_record" "wordpress_db_record" {
+  zone_id = "Z011574713TABDE8M6U0Q"  
+  name    = "wordpress.pauldchang.com"
+  type    = "CNAME"
+  ttl     = 300
+  records = [data.aws_db_instance.wordpress_db_info.address]
 }
