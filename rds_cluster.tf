@@ -1,10 +1,8 @@
-
-
 resource "aws_db_subnet_group" "default" {
   name        = "test-subnet-group"
   description = "Terraform example RDS subnet group"
 
-  subnet_ids  = [aws_subnet.private[0].id, aws_subnet.private[1].id, aws_subnet.private[2].id,]
+  subnet_ids  = [aws_subnet.private[0].id, aws_subnet.private[1].id, aws_subnet.private[2].id]
 }
 
 resource "aws_db_instance" "writer" {
@@ -17,11 +15,10 @@ resource "aws_db_instance" "writer" {
   username             = "admin"
   password             = "password"
   parameter_group_name = "default.mysql8.0"
-  publicly_accessible   = false
-  
+  publicly_accessible  = false
+
   vpc_security_group_ids = [aws_security_group.projectsec.id]
-  # db_subnet_group_name = OUR!!! #chaange
-  skip_final_snapshot  = true
+  skip_final_snapshot    = true
 }
 
 resource "aws_db_instance" "reader1" {
@@ -34,16 +31,7 @@ resource "aws_db_instance" "reader1" {
   username             = "admin"
   password             = "password"
   parameter_group_name = "default.mysql8.0"
-  publicly_accessible   = false
+  publicly_accessible  = false
   vpc_security_group_ids = [aws_security_group.projectsec.id]
-  # db_subnet_group_name = OUR!!!#change
-  skip_final_snapshot  = true
-
- #aws_db_instance_identifier = aws_db_instance.writer.id
- 
+  skip_final_snapshot    = true
 }
-
-# data "aws_db_instance" "reader1 {
-#    db_instance_identifier = aws_db_instance.writer.id
-
-# }

@@ -13,45 +13,6 @@ resource "aws_launch_template" "projecttemplate" {
 }
 
 
-
-#   user_data = base64encode (<<EOF
-# #!/bin/bash
-# yum update -y
-# yum install -y httpd php php-mysqlnd
-# systemctl start httpd
-# systemctl enable httpd
-# wget -c https://wordpress.org/latest.tar.gz
-# tar -xvzf latest.tar.gz -C /var/www/html
-# cp -r /var/www/html/wordpress/* /var/www/html/
-# chown -R apache:apache /var/www/html/
-
-# cd /var/www/html/
-# echo "
-# <?php
-# define( 'DB_NAME', 'admin' );
-# define( 'DB_USER', 'admin' );
-# define( 'DB_PASSWORD', 'password' );
-# define( 'DB_HOST', 'terraform-**************************.ct6kq4048kie.us-east-1.rds.amazonaws.com' );
-# define( 'DB_CHARSET', 'utf8mb4' );
-# define( 'DB_COLLATE', '' );
-# define( 'AUTH_KEY',         'admin' );                                                             
-# define( 'SECURE_AUTH_SALT', 'admin' );
-# define( 'LOGGED_IN_SALT',   'admin' );
-# define( 'NONCE_SALT',       'admin' );
-# \$table_prefix = 'wp_';
-# define( 'WP_DEBUG', false );
-# if ( ! defined( 'ABSPATH' ) ) {
-#         define( 'ABSPATH', __DIR__ . '/' );
-# }
-# require_once ABSPATH . 'wp-settings.php';
-# " > wp-config.php
-
-# service httpd restart
-# EOF
-#   )
-    
-#}
-
 user_data     = base64encode (<<-EOF
                   #!/bin/bash
                   yum update -y
@@ -99,8 +60,7 @@ resource "aws_lb" "wordpress_alb" {
   name               = "wordpress-alb"
   internal           = false
   load_balancer_type = "application"
-  security_groups    = [aws_security_group.projectsec1.id]       # needt to change
-  #subnets            = concat(aws_subnet.public[*].id, aws_subnet.private[*].id)
+  security_groups    = [aws_security_group.projectsec1.id]       
   subnets            = concat(aws_subnet.public[*].id)
   tags = {
     Name = "WordPressALB"
